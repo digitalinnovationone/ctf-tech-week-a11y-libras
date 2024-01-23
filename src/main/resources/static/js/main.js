@@ -12,6 +12,7 @@ async function main() {
             audioRecorder.start();
             startStopRecordButton.innerText = 'Parar Gravação';
             transcribeButton.disabled = true;
+            transcriptText.innerText = '';
         } else {
             const audioBlob = await audioRecorder.stop();
             const audioUrl = URL.createObjectURL(audioBlob);
@@ -27,13 +28,19 @@ async function main() {
         const formData = new FormData();
         formData.append('file', audioBlob, 'audio.webm');
         
-        const response = await fetch('http://localhost:8080/transcribed-audios', {
-            method: 'POST',
-            body: formData,
-        });
-
-        const data = await response.json();
-        transcriptText.innerText = data.transcript;
+        transcribeButton.disabled = true;
+        transcribeButton.innerText = 'Transcrevendo...';
+        try {
+            const response = await fetch('http://localhost:8080/transcribed-audios', {
+                method: 'POST',
+                body: formData,
+            });
+            const data = await response.json();
+            transcriptText.innerText = data.transcript;
+        } finally {
+            transcribeButton.disabled = false;
+            transcribeButton.innerText = 'Transcrever Áudio';
+        }
     })
 }
 
