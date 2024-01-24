@@ -25,15 +25,17 @@ public class GlobalExceptionHandler {
     private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler({ ApplicationBusinessException.class, EnterpriseBusinessException.class })
-    public ResponseEntity<String> handleApplicationBusinessException(RuntimeException e) {
+    public ResponseEntity<ApiError> handleApplicationBusinessException(RuntimeException e) {
         logger.debug("Business exception occurred: {}", e.getMessage());
-        return new ResponseEntity<>(e.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
+        return new ResponseEntity<>(new ApiError(e.getMessage()), HttpStatus.UNPROCESSABLE_ENTITY);
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Object> handleException(Exception e) {
+    public ResponseEntity<ApiError> handleException(Exception e) {
         logger.error("Unexpected exception occurred: ", e);
-        return new ResponseEntity<>("An unexpected error occurred.", HttpStatus.INTERNAL_SERVER_ERROR);
+        return new ResponseEntity<>(new ApiError("An unexpected error occurred."), HttpStatus.INTERNAL_SERVER_ERROR);
     }
+
+    public record ApiError(String message) {}
 }
 
