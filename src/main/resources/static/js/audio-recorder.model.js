@@ -4,16 +4,34 @@
  * @overview https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes
  */
 class AudioRecorder {
+    #mediaRecorder = null;
+    #audioPromise = null;
+    static AUDIO_TYPE = 'audio/wav';
 
-    start() {
-        // TODO: 1.1. Iniciar a gravação de áudio
+    async start() {
+        const stream = await navigator.mediaDevices.getUserMedia({audio: true});
+        this.#setupMediaRecorder(stream);
+        this.#mediaRecorder.start();
+    }
+
+    #setupMediaRecorder(stream) {
+        const audioChunks = [];
+        this.#mediaRecorder = new MediaRecorder(stream);
+        this.#mediaRecorder.ondataavailable = event => audioChunks.push(event.data)
+        this.#audioPromise = new Promise((resolve) => {
+            this.#mediaRecorder.onstop = () => {
+                const audioBlob = new Blob(audioChunks, { type: AudioRecorder.AUDIO_TYPE });
+                resolve(audioBlob);
+            };
+        });
     }
 
     stop() {
-        // TODO: 1.2. Parar a gravação de áudio.
+        this.#mediaRecorder.stop();
+        return this.#audioPromise;
     }
 
     get recordedAudio() {
-        // TODO: 1.3. Retornar a última gravação de áudio.
+        return this.#audioPromise;
     }
 }

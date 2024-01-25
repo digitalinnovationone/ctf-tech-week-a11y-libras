@@ -36,27 +36,35 @@ async function handleRecordButton(audioRecorder) {
 }
 
 async function startRecording(audioRecorder) {
-    // TODO: 2.1. Utilizar a instância de AudioRecorder para iniciar a gravação do áudio.
+    await audioRecorder.start();
     startStopRecordButton.innerText = RECORD_BUTTON_TEXT.STOP;
     transcribeButton.disabled = true;
 }
 
 async function stopRecording(audioRecorder) {
-    // TODO: 2.2. Utilizar a instância de AudioRecorder para parar a gravação do áudio.
+    const audioBlob = await audioRecorder.stop();
+    audioPlayer.src = URL.createObjectURL(audioBlob);
     startStopRecordButton.innerText = RECORD_BUTTON_TEXT.START;
     transcribeButton.disabled = false;
 }
 
 async function handleTranscribeButton(audioRecorder) {
-    // TODO: 2.3. Utilizar a instância de AudioRecorder para recuperar a áudio gravado.
     transcribeButton.disabled = true;
     transcribeButton.innerText = TRANSCRIBE_BUTTON_TEXT.TRANSCRIBING;
 
-    // TODO: 2.4. Integrar com nossa API REST de trancrição de áudio. Remover esse setTimeout maroto ;)
-    setTimeout(function () {
-        transcribeButton.disabled = false;
-        transcribeButton.innerText = TRANSCRIBE_BUTTON_TEXT.DEFAULT;
-    }, 1000);
+    const audioBlob = await audioRecorder.recordedAudio;
+    const formData= new FormData();
+    formData.append('file', audioBlob, 'audio.wav');
+
+    const response = await fetch(TRANSCRIPTION_API_URL, {
+        method: 'POST',
+        body: formData
+    });
+    const data = await response.json();
+    transcriptText.innerText = response.ok ? data.transcript : `[API ERROR]: ${data.message}`;
+
+    transcribeButton.disabled = false;
+    transcribeButton.innerText = TRANSCRIBE_BUTTON_TEXT.DEFAULT;
 }
 
 document.addEventListener('DOMContentLoaded', main);
